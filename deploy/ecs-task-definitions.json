@@ -1,0 +1,33 @@
+{
+  "family": "feed-api",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "containerDefinitions": [
+    {
+      "name": "feed-api",
+      "image": "ACCOUNT.dkr.ecr.us-east-1.amazonaws.com/feed-api:latest",
+      "portMappings": [{ "containerPort": 8000, "protocol": "tcp" }],
+      "secrets": [
+        { "name": "DATABASE_URL", "valueFrom": "arn:aws:ssm:::parameter/feed/database_url" },
+        { "name": "REDIS_URL", "valueFrom": "arn:aws:ssm:::parameter/feed/redis_url" },
+        { "name": "KAFKA_BOOTSTRAP", "valueFrom": "arn:aws:ssm:::parameter/feed/kafka_bootstrap" }
+      ],
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -fsS http://localhost:8000/health || exit 1"],
+        "interval": 15,
+        "timeout": 5,
+        "retries": 3
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/feed-api",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "feed"
+        }
+      }
+    }
+  ]
+}
