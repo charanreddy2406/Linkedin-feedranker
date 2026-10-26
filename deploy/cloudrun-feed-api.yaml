@@ -1,0 +1,25 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: feed-api
+spec:
+  template:
+    spec:
+      containers:
+        - image: gcr.io/PROJECT_ID/feed-api:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef: { name: feed-secrets, key: database_url }
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef: { name: feed-secrets, key: redis_url }
+            - name: KAFKA_BOOTSTRAP
+              valueFrom:
+                secretKeyRef: { name: feed-secrets, key: kafka_bootstrap }
+          startupProbe:
+            httpGet: { path: /health, port: 8000 }
+            periodSeconds: 5
+            failureThreshold: 12
